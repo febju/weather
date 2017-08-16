@@ -133,18 +133,18 @@
                         //Luodaan parseri
                         var parser = new DOMParser();
                         var xmlDoc = parser.parseFromString(xml,"text/xml");
-                        //Haetaan kaikki parametri arvot eli läpötilat ja sääsymbolit, jotka ovat vuorotellen tiedostossa
+                        //Haetaan kaikki parametri arvot eli lämpötilat ja sääsymbolit, jotka ovat vuorotellen tiedostossa
                         var data =  xmlDoc.getElementsByTagName("BsWfs:ParameterValue");
                         //Asetetaan muuttuja nimiavaruuden tarkistusta varten
                         /*
                             Testauksessa kävi ilmi, että kaikki selaimet eivät käsitelleet XML-tiedostoja samoin.
-                            Mobiili Chromella nimiavaruuden käyttö aiheutti 0 hakutulosta. Tästä syystä varaudutaan hakemaan myös ilman nimiavaruutta.
+                            Mobiili Chromella nimiavaruuden käyttö aiheutti 0 hakutulosta. Tästä syystä varaudutaan hakemaan myös ilman nimiavaruutta (eli "BsWfs:" pois).
                         */
                         var namespace = true;
                         //Jos hakutuloksia ei tullut, suoritetaan haku ilman nimiavaruutta
                         if (data.length == 0) {
                             data =  xmlDoc.getElementsByTagName("ParameterValue");
-                            namespace = false;  //Asetettaan nimiavaruus falseksi, jotta voidaan suorittaa myöhemmät haut oikein.
+                            namespace = false;  //Asetettaan nimiavaruus false:ksi, jotta voidaan suorittaa myöhempi ajan hakeminen oikein.
                         }
                         $('#top').append('<h4>' + city +'</h4>');
                         for (i = 0; i < data.length; i++) {
@@ -165,14 +165,14 @@
                             var temperature = Math.round(data[i].childNodes[0].nodeValue);
                             //Siirrytään seuraavaan solmuun
                             /*
-                                Solmut käyttävä pareittain sillä yhden tunnin lämpötila ja sääsymboli ovat peräkkäin.
+                                Solmut käytävä pareittain läpi, sillä yhden tunnin lämpötila ja sääsymboli ovat peräkkäin hakutuloksissa.
                             */
                             i++;
                             //Asetetaan sääsymboli
                             var symbol = parseInt(data[i].childNodes[0].nodeValue, 10);
                             //Asetetaan symbolin tiedostonimi, jotta saadaan symbolin kuva. Osalla symboleista on eri kuvat yöaikaan ja osalla ei. Yökuvan erona on "n" luvun perässä.
                             var suffix = '';
-                            //Symbolit joilla o yökuvat ovat taulukossa
+                            //Symbolit joilla on yökuva ovat taulukossa
                             var suffix_allowed = [1,2,21,22,23,41,42,43,61,62,71,72,73];
                             //Asetetaan yötä vastaava pääte, jos aika on oikea ja symbolilla on yökuva
                             if ( (time.getHours() < 6 || time.getHours() > 21) && (jQuery.inArray( symbol, suffix_allowed )) != -1) suffix = 'n';
