@@ -1,24 +1,19 @@
 # weather
 
 Ominaisuudet
-*Toimii käyttäjän laitteella Javascriptilla.
-* Käyttää yhtä html tiedostoa. Kansio symbolikuville ja tyylitiedostolle. Erillinen piilotettu JS-tiedosto joka palauttaa FMI-API avaimen.
-..*Vaatii HTTPS-yhteyden HTML5 Geolocationin käyttöä varten.
+- Toimii käyttäjän laitteella Javascriptilla.
+- Käyttää yhtä html tiedostoa. Kansio symbolikuville ja tyylitiedostolle. Erillinen piilotettu JS-tiedosto joka palauttaa FMI-API avaimen.
+- Vaatii HTTPS-yhteyden HTML5 Geolocationin käyttöä varten.
 
 
 Käytetyt kirjastot
-..*HTML5 Geolocation (Koordinaattien selvitys)
-..*Google Geocoder API (Kaupungin nimen selvitys koordinaateilla)
-
--Jquery 3.2.1 (Käyttöliittymä)
-
--Jquery Mobile 1.5.0 Alpha 1 (Näytön asennon selvitys)
-
--Bootstrap 4 (Käyttöliittymä)
-
--Popper (Bootstrap 4 vaatimus)
-
--Ilmatieteenlaitoksen avoimen datan palvelu (Sääennusteet)
+- HTML5 Geolocation (Koordinaattien selvitys)
+- Google Geocoder API (Kaupungin nimen selvitys koordinaateilla)
+- Jquery 3.2.1 (Käyttöliittymä)
+- Jquery Mobile 1.5.0 Alpha 1 (Näytön asennon selvitys)
+- Bootstrap 4 (Käyttöliittymä)
+- Popper (Bootstrap 4 vaatimus)
+- Ilmatieteenlaitoksen avoimen datan palvelu (Sääennusteet)
 
 
 Toiminnot
