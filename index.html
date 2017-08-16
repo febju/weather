@@ -121,6 +121,7 @@
             function getWeatherData (city,latlon) {
                 //Haetaan sääennusteet Ilmatieteteen laitoksen avoimen datan palvelusta. Haetaan ainoastaan lämpötila ja sääsymboli. Annetaan myös koordinaatit, jotta saadaan tiedot lähimmältä sääasema.
                 //Alkuperäinen kysely, käyttäen paikannukseen kaupunkia
+                //var request_url="https://data.fmi.fi/fmi-apikey/KEY_HERE/wfs?request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::simple&parameters=temperature,WeatherSymbol3&place="+city;
                 //Parempi kysely, käyttäen koordinaatteja paikannukseen. Tuloksena tarkemmat säätiedot, sillä ennusteet saadaan lähimmältä sääasemalta.
                 var request_url="https://data.fmi.fi/fmi-apikey/"+fmi()+"/wfs?request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::simple&parameters=temperature,WeatherSymbol3&latlon="+latlon;
                 var xhttp = new XMLHttpRequest();
