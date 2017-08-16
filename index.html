@@ -178,7 +178,8 @@
                             if ( (time.getHours() < 6 || time.getHours() > 21) && (jQuery.inArray( symbol, suffix_allowed )) != -1) suffix = 'n';
                             
                             /*
-                                Lisätään 
+                                Lisätään jokaiselta tunnilta aika, lämpötila ja sääsymbolin kuva (myös symboleiden selitteet popover:eissa).
+                                Rivi lisätään, sekä pysty- että poikittaisnäkymiin eri muodoissa.
                             */
                             //Vertical
                             $('#vertical').append('<div class="row row-vertical col-12 vertical-forecast border border-primary text-center"><span class="col-4">' + day + ' ' + date + '</span><span class="col-2">' + hour + ':00</span><span class="col-2"><img src="img/' + symbol + suffix + '.png" data-toggle="popover" data-placement="right" data-content="' + getWeatherStateText(symbol) + '"></span><span class="col-3">' + temperature + '°C</span></div>');
