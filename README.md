@@ -1,8 +1,8 @@
 # weather
 
 Ominaisuudet
-..*Toimii käyttäjän laitteella Javascriptilla.
-..*Käyttää yhtä html tiedostoa. Kansio symbolikuville ja tyylitiedostolle. Erillinen piilotettu JS-tiedosto joka palauttaa FMI-API avaimen.
+*Toimii käyttäjän laitteella Javascriptilla.
+* Käyttää yhtä html tiedostoa. Kansio symbolikuville ja tyylitiedostolle. Erillinen piilotettu JS-tiedosto joka palauttaa FMI-API avaimen.
 ..*Vaatii HTTPS-yhteyden HTML5 Geolocationin käyttöä varten.
 
 
