@@ -1,0 +1,31 @@
+body {
+    background-color: #415c87;
+    color: #C8C8C8;
+    font-family: 'Roboto', sans-serif;
+}
+
+h4 {
+    color: #00ff00;
+    padding-top: 5px;
+}
+
+#top, #bottom, .row{
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.row-vertical{
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.vertical-forecast {
+  display: inline-block;
+}
+
+span {
+  display: inline-block;
+  vertical-align: middle;
+}

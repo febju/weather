@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <title>Weather</title>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:500" rel="stylesheet">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/style.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" type="text/javascript"> </script>
+        <script src="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.js" type="text/javascript"> </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+        <script src="APIs.js"></script>
+    </head>
+    <body>
+        <div id ="display">
+            <div id="top"></div>
+            <div id="vertical" class="row"></div>
+            <div id="horizontal" class="row"></div>
+            <div id="bottom"></div>
+        </div>
+    
+        <script>
+        
+            //Estetään "loading" tekstin ilmaantuminen sivun alareunaan
+            $.mobile.autoInitializePage = false;
+            
+            //Tarkistetaan näytön asento. Jos leveys on pituutta suurempi, näyttö on poikittain.
+            if(window.innerHeight > window.innerWidth) $( "#horizontal" ).hide();   //Näytön ollessa pitkittäin käytetään pitkittäisnäkymää, piilottamalla poikittaisnäkymä
+            else $( "#vertical" ).hide();                                           //Poikittaistilassa piilotetaan pitkittäisnäkymä
+        
+            //Tarkistetaan ruudun asento mobiililaitteella. Aktivoituu havaittaessa näytön kääntö.
+            $(window).on("orientationchange",function(){
+                //Näyttö pystyasennossa
+                if(window.orientation == 0) {
+                    $( "#horizontal" ).hide();  //Piilotetaan poikittaisosio
+                    $( "#vertical" ).show();    //Näytetään pystyosio
+                }
+                //Näyttö poikittain
+                else {
+                    $( "#vertical" ).hide();    //Piilotetaan pystyosio
+                    $( "#horizontal" ).show();  //Näytetään poikittaisosio
+                }
+            });
+            
+            //Tarkistetaan onko paikallistus mahdollista
+            if (navigator.geolocation) {
+                //Jos on edetään paikannukseen
+                var coords = navigator.geolocation.getCurrentPosition(getLocation,showError);
+            }
+            else {
+                alert('Geolocation is not supported by this browser.');
+            }
+            
+            //Virheentarkistus paikkatiedoille
+            /*
+                HUOM
+                Jos mobililaitteen GPS ei ole päällä ei siitä tule virheilmoitusta ja mitään ei tulostu.
+            */
+            function showError(error) {
+                var display = document.getElementById("display");
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        display.innerHTML = "Käyttäjä ei antanut lupaa sijaintitiedoille."
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        display.innerHTML = "Sijaintitiedot eivät saatavilla."
+                        break;
+                    case error.TIMEOUT:
+                        display.innerHTML = "Pyyntö aikakatkaistiin."
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        display.innerHTML = "Tuntematon virhe."
+                        break;
+                }
+            }
+            
+            //Paikannusfunktio, joka hakee kaupungin nimen ja säätiedot koordinaattien perusteella
+            function getLocation(position) {
+                var lat = position.coords.latitude;     //Asettaa laitteen leveysasteen
+                var lon = position.coords.longitude;    //Asettaa laitteen pituusasteen
+                
+                //Suoritetaan paikan etsiminen saatujen koordinaattien avulla
+                getPlace(lat, lon, function(place) {
+                    //Käydään läpi hakutulos, rajoittaen silmukka osoitteen komponenteista koostuvan taulukon koolla
+                    for (var i = 0; i < place.address_components.length; i++) {
+                        //Jos komponentin tyyppi vastaa "lokaliteettia", sisältää se kaupungin nimen
+    					if (place.address_components[i].types[0] === "locality") {
+    					    //Asetetaan kaupunki
+    						var city = place.address_components[i].short_name;
+    					}
+                    }
+                    //Luodaan latlon-muuttuja säätietojen hakua varten
+                    var latlon = lat + ',' + lon;
+                    //Haetaan säätiedot
+                    getWeatherData(city,latlon);
+                });
+            }
+            
+            //Hakee tiedot parametrilla syötetyistä koordinaateista. Käyttää Googlen API:a.
+            function getPlace (latitude,longitude,callback) {
+                var geocoder = new google.maps.Geocoder;                                //Geocoder
+                var latlng = {lat: latitude, lng: longitude};                           //koordinaatit
+                geocoder.geocode({'location': latlng}, function(results, status) {
+                    if (status == 'OK') {
+                        if (results) {
+                            callback(results[0]);                                       //Palautetaan tulokset
+                        }
+                        else {
+                            alert('No results found');
+                        }
+                    }
+                    else {
+                        alert('Geocoder failed due to: ' + status);
+                    }
+                });
+            }
+            
+            //Tulostaa verkkosivulle säätiedot. Vaatii kaupungin ja koordinaatit parametreina.
+            function getWeatherData (city,latlon) {
+                //Haetaan sääennusteet Ilmatieteteen laitoksen avoimen datan palvelusta. Haetaan ainoastaan lämpötila ja sääsymboli. Annetaan myös koordinaatit, jotta saadaan tiedot lähimmältä sääasema.
+                //Alkuperäinen kysely, käyttäen paikannukseen kaupunkia
+                //Parempi kysely, käyttäen koordinaatteja paikannukseen. Tuloksena tarkemmat säätiedot, sillä ennusteet saadaan lähimmältä sääasemalta.
+                var request_url="https://data.fmi.fi/fmi-apikey/"+fmi()+"/wfs?request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::simple&parameters=temperature,WeatherSymbol3&latlon="+latlon;
+                var xhttp = new XMLHttpRequest();
+                //XML tiedoston käsittely
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        //Asetetaan XML-tiedosto
+                        var xml = this.responseText;
+                        //Luodaan parseri
+                        var parser = new DOMParser();
+                        var xmlDoc = parser.parseFromString(xml,"text/xml");
+                        //Haetaan kaikki parametri arvot eli läpötilat ja sääsymbolit, jotka ovat vuorotellen tiedostossa
+                        var data =  xmlDoc.getElementsByTagName("BsWfs:ParameterValue");
+                        //Asetetaan muuttuja nimiavaruuden tarkistusta varten
+                        /*
+                            Testauksessa kävi ilmi, että kaikki selaimet eivät käsitelleet XML-tiedostoja samoin.
+                            Mobiili Chromella nimiavaruuden käyttö aiheutti 0 hakutulosta. Tästä syystä varaudutaan hakemaan myös ilman nimiavaruutta.
+                        */
+                        var namespace = true;
+                        //Jos hakutuloksia ei tullut, suoritetaan haku ilman nimiavaruutta
+                        if (data.length == 0) {
+                            data =  xmlDoc.getElementsByTagName("ParameterValue");
+                            namespace = false;  //Asetettaan nimiavaruus falseksi, jotta voidaan suorittaa myöhemmät haut oikein.
+                        }
+                        $('#top').append('<h4>' + city +'</h4>');
+                        for (i = 0; i < data.length; i++) {
+                            //Muuttuja ennusteen ajalle
+                            var time;
+                            //Haetaan aika XML-tiedostosta, jokaisella solmulla on aika
+                            if (namespace == true) time = new Date (xmlDoc.getElementsByTagName("BsWfs:Time")[i].childNodes[0].nodeValue);
+                            else time = new Date (xmlDoc.getElementsByTagName("Time")[i].childNodes[0].nodeValue);
+                            //Asetetaan päivämäärä ennusteelle
+                            var date = time.getDate() +'.' + (time.getMonth()+1) +'.';
+                            //Asetetaan viikonpäivä ennusteelle
+                            var day_number = time.getDay();
+                            var days = ['Su','Ma','Ti','Ke','To','Pe','La'];
+                            var day = days[time.getDay()];
+                            //Asetetaan tunti ennusteelle
+                            var hour = ("0" + time.getHours()).slice(-2);
+                            //Asetetaan lämpötila
+                            var temperature = Math.round(data[i].childNodes[0].nodeValue);
+                            //Siirrytään seuraavaan solmuun
+                            /*
+                                Solmut käyttävä pareittain sillä yhden tunnin lämpötila ja sääsymboli ovat peräkkäin.
+                            */
+                            i++;
+                            //Asetetaan sääsymboli
+                            var symbol = parseInt(data[i].childNodes[0].nodeValue, 10);
+                            //Asetetaan symbolin tiedostonimi, jotta saadaan symbolin kuva. Osalla symboleista on eri kuvat yöaikaan ja osalla ei. Yökuvan erona on "n" luvun perässä.
+                            var suffix = '';
+                            //Symbolit joilla o yökuvat ovat taulukossa
+                            var suffix_allowed = [1,2,21,22,23,41,42,43,61,62,71,72,73];
+                            //Asetetaan yötä vastaava pääte, jos aika on oikea ja symbolilla on yökuva
+                            if ( (time.getHours() < 6 || time.getHours() > 21) && (jQuery.inArray( symbol, suffix_allowed )) != -1) suffix = 'n';
+                            
+                            /*
+                                Lisätään 
+                            */
+                            //Vertical
+                            $('#vertical').append('<div class="row row-vertical col-12 vertical-forecast border border-primary text-center"><span class="col-4">' + day + ' ' + date + '</span><span class="col-2">' + hour + ':00</span><span class="col-2"><img src="img/' + symbol + suffix + '.png" data-toggle="popover" data-placement="right" data-content="' + getWeatherStateText(symbol) + '"></span><span class="col-3">' + temperature + '°C</span></div>');
+                            
+                            //Horizontal
+                            $('#horizontal').append('<div class="col-lg-1 col-2 horizontal-forecast border border-primary text-center">' + day + ' ' + date + '<br>' + hour + ':00<br>' +' <img src="img/' + symbol + suffix + '.png" data-toggle="popover" data-placement="top" data-content="' + getWeatherStateText(symbol) + '"><br>' + temperature + '°C</div>');
+                        }
+                        //Alustetaan popoverit
+                        $('[data-toggle="popover"]').popover();
+                        //Lisätään disclaimer tiedoista sivun alaosaan
+                        $('#bottom').append('Säätiedot ovat saatavilla alkaen seuraavasta tasatunnista ja ennusteet päivittyvät kolmen tunnin välein.<br><small>Säätiedot päivitetty: ' + new Date());
+                    }
+                };
+                //XML-tiedoston noutaminen
+                xhttp.open("GET", request_url, true);
+                xhttp.send();
+            }
+            
+            //Funktio palauttaa sääsymbolin tekstiselitteen
+            function getWeatherStateText (weather_symbol) {
+                if (weather_symbol === 1) return "selkeää";
+                if (weather_symbol === 2) return "puolipilvistä";
+                if (weather_symbol === 21) return "heikkoja sadekuuroja";
+                if (weather_symbol === 22) return "sadekuuroja";
+                if (weather_symbol === 23) return "voimakkaita sadekuuroja";
+                if (weather_symbol === 3) return "pilvistä";
+                if (weather_symbol === 31) return "heikkoa vesisadetta";
+                if (weather_symbol === 32) return "vesisadetta";
+                if (weather_symbol === 33) return "voimakasta vesisadetta";
+                if (weather_symbol === 41) return "heikkoja lumikuuroja";
+                if (weather_symbol === 42) return "lumikuuroja";
+                if (weather_symbol === 43) return "voimakkaita lumikuuroja";
+                if (weather_symbol === 51) return "heikkoa lumisadetta";
+                if (weather_symbol === 52) return "lumisadetta";
+                if (weather_symbol === 53) return "voimakasta lumisadetta";
+                if (weather_symbol === 61) return "ukkoskuuroja";
+                if (weather_symbol === 62) return "voimakkaita ukkoskuuroja";
+                if (weather_symbol === 63) return "ukkosta";
+                if (weather_symbol === 64) return "voimakasta ukkosta";
+                if (weather_symbol === 71) return "heikkoja räntäkuuroja";
+                if (weather_symbol === 72) return "räntäkuuroja";
+                if (weather_symbol === 73) return "voimakkaita räntäkuuroja";
+                if (weather_symbol === 81) return "heikkoa räntäsadetta";
+                if (weather_symbol === 82) return "räntäsadetta";
+                if (weather_symbol === 83) return "voimakasta  räntäsadetta";
+                if (weather_symbol === 91) return "utua";
+                if (weather_symbol === 92) return "sumua";
+            }
+                
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUdCl40XSqzAPryPokHD_-TEkWWXY7wRs">
+        </script>
+    </body>
+</html>
